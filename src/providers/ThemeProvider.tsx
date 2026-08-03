@@ -23,6 +23,9 @@ type ThemeContextValue = {
   setDynamicEnabled: (enabled: boolean) => void
   dynamicPalette: DynamicPalette
   setDynamicPalette: (palette: DynamicPalette) => void
+  /** Enables dynamic tint and applies an album palette in one step */
+  applyAlbumPalette: (palette: DynamicPalette) => void
+  clearAlbumPalette: () => void
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
@@ -57,6 +60,16 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
     setMode(mode === 'dark' ? 'light' : 'dark')
   }, [mode, setMode])
 
+  const applyAlbumPalette = useCallback((palette: DynamicPalette) => {
+    setDynamicPalette(palette)
+    setDynamicEnabled(true)
+  }, [])
+
+  const clearAlbumPalette = useCallback(() => {
+    setDynamicEnabled(false)
+    setDynamicPalette(DEFAULT_DYNAMIC_PALETTE)
+  }, [])
+
   useEffect(() => {
     applyThemeAttributes(mode, dynamicEnabled, dynamicPalette)
 
@@ -79,6 +92,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       setDynamicEnabled,
       dynamicPalette,
       setDynamicPalette,
+      applyAlbumPalette,
+      clearAlbumPalette,
     }),
     [
       mode,
@@ -86,6 +101,8 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       toggleMode,
       dynamicEnabled,
       dynamicPalette,
+      applyAlbumPalette,
+      clearAlbumPalette,
     ],
   )
 

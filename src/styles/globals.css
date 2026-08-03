@@ -31,7 +31,8 @@
 
 :root,
 [data-theme='light'] {
-  --background: #f4f6f8;
+  --background-base: #f4f6f8;
+  --background: var(--background-base);
   --background-elevated: #ffffff;
   --foreground: #0f172a;
   --foreground-muted: #64748b;
@@ -42,8 +43,10 @@
   --surface-muted: #eef2f6;
   --surface-glass: rgb(255 255 255 / 0.72);
 
-  --border: #e2e8f0;
-  --border-strong: #cbd5e1;
+  --border-base: #e2e8f0;
+  --border-strong-base: #cbd5e1;
+  --border: var(--border-base);
+  --border-strong: var(--border-strong-base);
   --ring: #0ea5e9;
 
   --accent: #0ea5e9;
@@ -57,7 +60,8 @@
   --info: #3b82f6;
 
   --dock-bg: rgb(15 23 42 / 0.88);
-  --dock-border: rgb(148 163 184 / 0.25);
+  --dock-border-base: rgb(148 163 184 / 0.25);
+  --dock-border: var(--dock-border-base);
   --dock-item: rgb(30 41 59 / 0.95);
   --dock-item-active: rgb(14 165 233 / 0.25);
   --dock-label: #0f172a;
@@ -65,7 +69,8 @@
   --dock-icon: #f8fafc;
 
   --overlay: rgb(15 23 42 / 0.45);
-  --header-bg: rgb(244 246 248 / 0.78);
+  --header-bg-base: rgb(244 246 248 / 0.78);
+  --header-bg: var(--header-bg-base);
 
   /* Dynamic theme hooks (Spotify album palette, etc.) */
   --dynamic-primary: var(--accent);
@@ -75,7 +80,8 @@
 }
 
 [data-theme='dark'] {
-  --background: #070b12;
+  --background-base: #070b12;
+  --background: var(--background-base);
   --background-elevated: #0d121c;
   --foreground: #f1f5f9;
   --foreground-muted: #94a3b8;
@@ -86,8 +92,10 @@
   --surface-muted: #1a2333;
   --surface-glass: rgb(17 24 39 / 0.72);
 
-  --border: #1f2a3d;
-  --border-strong: #334155;
+  --border-base: #1f2a3d;
+  --border-strong-base: #334155;
+  --border: var(--border-base);
+  --border-strong: var(--border-strong-base);
   --ring: #38bdf8;
 
   --accent: #38bdf8;
@@ -101,7 +109,8 @@
   --info: #60a5fa;
 
   --dock-bg: rgb(8 12 20 / 0.9);
-  --dock-border: rgb(148 163 184 / 0.18);
+  --dock-border-base: rgb(148 163 184 / 0.18);
+  --dock-border: var(--dock-border-base);
   --dock-item: rgb(30 41 59 / 0.95);
   --dock-item-active: rgb(56 189 248 / 0.22);
   --dock-label: #f8fafc;
@@ -109,7 +118,8 @@
   --dock-icon: #f8fafc;
 
   --overlay: rgb(2 6 23 / 0.65);
-  --header-bg: rgb(7 11 18 / 0.78);
+  --header-bg-base: rgb(7 11 18 / 0.78);
+  --header-bg: var(--header-bg-base);
 
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.35);
   --shadow-md: 0 10px 28px rgb(0 0 0 / 0.35);
@@ -121,14 +131,50 @@
   --dynamic-foreground: var(--foreground);
 }
 
-/* Dynamic theme mode: brand colors come from --dynamic-* overrides */
-[data-theme='dynamic'] {
+/* Dynamic theme: album palette tints accents + borders across Hubify.
+   Base light/dark stays on data-theme; tint toggles via data-dynamic. */
+[data-dynamic='true'] {
   --accent: var(--dynamic-primary);
   --accent-hover: var(--dynamic-secondary);
-  --background: color-mix(in srgb, var(--dynamic-primary) 8%, var(--background));
-  --surface: var(--dynamic-surface);
-  --foreground: var(--dynamic-foreground);
+  --accent-muted: color-mix(in srgb, var(--dynamic-primary) 18%, transparent);
+  --accent-foreground: #ffffff;
   --ring: var(--dynamic-primary);
+
+  --border: color-mix(in srgb, var(--dynamic-primary) 32%, var(--border-base));
+  --border-strong: color-mix(
+    in srgb,
+    var(--dynamic-primary) 48%,
+    var(--border-strong-base)
+  );
+
+  --background: color-mix(
+    in srgb,
+    var(--dynamic-primary) 7%,
+    var(--background-base)
+  );
+  --header-bg: color-mix(
+    in srgb,
+    var(--dynamic-primary) 6%,
+    var(--header-bg-base)
+  );
+
+  --dock-item-active: color-mix(
+    in srgb,
+    var(--dynamic-primary) 28%,
+    transparent
+  );
+  --dock-border: color-mix(
+    in srgb,
+    var(--dynamic-primary) 35%,
+    var(--dock-border-base)
+  );
+}
+
+html {
+  transition:
+    background-color 400ms ease,
+    color 400ms ease,
+    border-color 400ms ease;
 }
 
 @theme inline {

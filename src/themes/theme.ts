@@ -1,6 +1,6 @@
 export type ThemeMode = 'light' | 'dark' | 'system'
 
-/** RGB channels used by dynamic theming (e.g. Spotify album colors). */
+/** Album-driven colors that re-tint the whole shell. */
 export type DynamicPalette = {
   primary: string
   secondary: string
@@ -26,6 +26,11 @@ export function resolveTheme(mode: ThemeMode): 'light' | 'dark' {
   return mode
 }
 
+/**
+ * Applies base theme (light/dark) and optional dynamic album tint.
+ * Keeps data-theme for light/dark and uses data-dynamic separately
+ * so dynamic mode never loses the underlying theme.
+ */
 export function applyThemeAttributes(
   mode: ThemeMode,
   dynamicEnabled: boolean,
@@ -34,7 +39,8 @@ export function applyThemeAttributes(
   const root = document.documentElement
   const resolved = resolveTheme(mode)
 
-  root.dataset.theme = dynamicEnabled ? 'dynamic' : resolved
+  root.dataset.theme = resolved
+  root.dataset.dynamic = dynamicEnabled ? 'true' : 'false'
   root.style.colorScheme = resolved
 
   root.style.setProperty('--dynamic-primary', palette.primary)

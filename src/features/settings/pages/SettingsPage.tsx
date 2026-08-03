@@ -67,14 +67,14 @@ export function SettingsPage() {
             </Badge>
           </CardHeader>
           <CardDescription className="mb-4">
-            Arquitectura preparada para que Spotify (u otros módulos) inyecten
-            una paleta vía `--dynamic-*`. Esta es solo una simulación.
+            También puedes activarlo desde Spotify: al elegir una canción mock
+            se aplica la paleta sobre bordes y acentos de toda la plataforma.
           </CardDescription>
           <Button
             variant={dynamicEnabled ? 'secondary' : 'primary'}
             onClick={() => setDynamicEnabled(!dynamicEnabled)}
           >
-            {dynamicEnabled ? 'Desactivar simulación' : 'Simular paleta dinámica'}
+            {dynamicEnabled ? 'Desactivar tint dinámico' : 'Activar tint dinámico'}
           </Button>
         </Card>
       </div>

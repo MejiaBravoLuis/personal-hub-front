@@ -1,69 +1,115 @@
+import { useEffect, useState } from 'react'
 import { motion } from 'motion/react'
 import {
   Music2,
   Play,
-  Pause,
   SkipBack,
   SkipForward,
   Volume2,
   Heart,
   ListMusic,
   Radio,
+  Palette,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { useTheme } from '@/providers'
+import { MOCK_PLAYLISTS, MOCK_TRACKS } from '@/features/spotify/data/mockTracks'
+import { paletteFromAlbumColors } from '@/features/spotify/lib/paletteFromAlbum'
 import { cn } from '@/utils/cn'
 
-const recentTracks = [
-  { title: 'Midnight City', artist: 'M83', duration: '4:03' },
-  { title: 'Blinding Lights', artist: 'The Weeknd', duration: '3:20' },
-  { title: 'Weightless', artist: 'Marconi Union', duration: '8:00' },
-  { title: 'Sunset Lover', artist: 'Petit Biscuit', duration: '3:57' },
-  { title: 'Nightcall', artist: 'Kavinsky', duration: '4:17' },
-]
-
-const playlists = [
-  { name: 'Focus Flow', tracks: 42 },
-  { name: 'Late Drive', tracks: 28 },
-  { name: 'Deep Work', tracks: 35 },
-]
-
 export function SpotifyPage() {
+  const { mode, dynamicEnabled, applyAlbumPalette, clearAlbumPalette } =
+    useTheme()
+  const [activeId, setActiveId] = useState(MOCK_TRACKS[0].id)
+
+  const activeTrack =
+    MOCK_TRACKS.find((track) => track.id === activeId) ?? MOCK_TRACKS[0]
+
+  const selectTrack = (trackId: string) => {
+    const track = MOCK_TRACKS.find((item) => item.id === trackId)
+    if (!track) return
+
+    setActiveId(track.id)
+    applyAlbumPalette(
+      paletteFromAlbumColors(
+        track.palette.primary,
+        track.palette.secondary,
+        mode,
+      ),
+    )
+  }
+
+  const selectRelative = (offset: number) => {
+    const index = MOCK_TRACKS.findIndex((track) => track.id === activeId)
+    const next =
+      MOCK_TRACKS[(index + offset + MOCK_TRACKS.length) % MOCK_TRACKS.length]
+    selectTrack(next.id)
+  }
+
+  // Keep palette in sync when user toggles light/dark while a track is tinting
+  useEffect(() => {
+    if (!dynamicEnabled) return
+    applyAlbumPalette(
+      paletteFromAlbumColors(
+        activeTrack.palette.primary,
+        activeTrack.palette.secondary,
+        mode,
+      ),
+    )
+  }, [mode]) // eslint-disable-line react-hooks/exhaustive-deps -- only re-derive on theme mode
+
   return (
     <div data-module="spotify" className="space-y-8">
       <PageHeader
         title="Spotify"
-        description="Tu módulo musical dentro de Hubify. Visual simulado — la conexión OAuth llegará después."
+        description="Elige una canción mock y mira cómo bordes y acentos de toda Hubify siguen la “portada”."
         actions={
-          <div className="flex items-center gap-2">
-            <Badge variant="default">Sin conectar</Badge>
-            <Button variant="secondary" size="sm" disabled>
-              Conectar cuenta
-            </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant={dynamicEnabled ? 'accent' : 'default'}>
+              {dynamicEnabled ? 'Tema dinámico ON' : 'Tema base'}
+            </Badge>
+            {dynamicEnabled ? (
+              <Button variant="secondary" size="sm" onClick={clearAlbumPalette}>
+                Quitar tint
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => selectTrack(activeTrack.id)}
+              >
+                Activar tint
+              </Button>
+            )}
           </div>
         }
       />
 
-      {/* Now playing — hero of the module */}
       <motion.section
         aria-labelledby="now-playing-heading"
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)]"
+        className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] transition-[border-color] duration-500"
       >
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,color-mix(in_srgb,var(--module-spotify)_28%,transparent),transparent_50%),radial-gradient(ellipse_at_100%_80%,color-mix(in_srgb,var(--module-spotify)_12%,transparent),transparent_45%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_0%,color-mix(in_srgb,var(--dynamic-primary)_28%,transparent),transparent_50%),radial-gradient(ellipse_at_100%_80%,color-mix(in_srgb,var(--dynamic-secondary)_14%,transparent),transparent_45%)]"
           aria-hidden
         />
 
         <div className="relative grid gap-8 p-6 sm:p-8 lg:grid-cols-[240px_1fr] lg:items-end">
           <div className="mx-auto w-full max-w-[240px]">
             <motion.div
-              className="aspect-square overflow-hidden rounded-[var(--radius-lg)] bg-[linear-gradient(145deg,color-mix(in_srgb,var(--module-spotify)_55%,#0a0a0a),#111827)] shadow-[var(--shadow-lg)]"
-              animate={{ scale: [1, 1.02, 1] }}
-              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+              key={activeTrack.id}
+              initial={{ opacity: 0.6, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.35 }}
+              className="aspect-square overflow-hidden rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)]"
+              style={{
+                background: `linear-gradient(145deg, ${activeTrack.palette.primary}, ${activeTrack.palette.secondary} 55%, #0f172a)`,
+              }}
             >
               <div className="flex h-full flex-col items-center justify-center gap-3 text-white/90">
                 <Music2 className="h-12 w-12 opacity-80" aria-hidden />
@@ -76,44 +122,56 @@ export function SpotifyPage() {
 
           <div className="space-y-5">
             <div>
-              <p className="mb-2 text-xs font-medium tracking-wide text-[var(--module-spotify)] uppercase">
+              <p className="mb-2 text-xs font-medium tracking-wide text-[var(--accent)] uppercase">
                 Reproduciendo ahora
               </p>
               <h2
                 id="now-playing-heading"
                 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl"
               >
-                Neon Horizons
+                {activeTrack.title}
               </h2>
               <p className="mt-1 text-[var(--foreground-muted)]">
-                Atlas Echo · Synthetic Nights
+                {activeTrack.artist} · {activeTrack.album}
               </p>
             </div>
 
-            {/* Progress (visual only) */}
             <div className="space-y-2" aria-hidden>
               <div className="h-1.5 overflow-hidden rounded-full bg-[var(--surface-muted)]">
-                <div className="h-full w-[38%] rounded-full bg-[var(--module-spotify)]" />
+                <div
+                  className="h-full rounded-full bg-[var(--accent)] transition-[width,background-color] duration-500"
+                  style={{ width: `${activeTrack.progress * 100}%` }}
+                />
               </div>
               <div className="flex justify-between text-xs text-[var(--foreground-subtle)]">
                 <span>1:24</span>
-                <span>3:47</span>
+                <span>{activeTrack.duration}</span>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <Button variant="ghost" size="icon" aria-label="Anterior" disabled>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Anterior"
+                onClick={() => selectRelative(-1)}
+              >
                 <SkipBack className="h-4 w-4" />
               </Button>
               <Button
                 size="icon"
-                className="h-12 w-12 rounded-full bg-[var(--module-spotify)] text-white hover:bg-[var(--module-spotify)] hover:opacity-90"
-                aria-label="Reproducir"
-                disabled
+                className="h-12 w-12 rounded-full"
+                aria-label="Reproducir (mock)"
+                onClick={() => selectTrack(activeTrack.id)}
               >
                 <Play className="h-5 w-5 fill-current" />
               </Button>
-              <Button variant="ghost" size="icon" aria-label="Siguiente" disabled>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Siguiente"
+                onClick={() => selectRelative(1)}
+              >
                 <SkipForward className="h-4 w-4" />
               </Button>
               <Button variant="ghost" size="icon" aria-label="Me gusta" disabled>
@@ -131,67 +189,77 @@ export function SpotifyPage() {
       </motion.section>
 
       <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-        {/* Queue */}
         <motion.section
           aria-labelledby="queue-heading"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.35 }}
-          className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6"
+          className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-5 transition-[border-color] duration-500 sm:p-6"
         >
           <div className="mb-4 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <ListMusic className="h-4 w-4 text-[var(--module-spotify)]" />
-              <h2 id="queue-heading" className="font-display text-base font-semibold">
+              <ListMusic className="h-4 w-4 text-[var(--accent)]" />
+              <h2
+                id="queue-heading"
+                className="font-display text-base font-semibold"
+              >
                 Recientes
               </h2>
             </div>
-            <Badge variant="default">Mock</Badge>
+            <Badge variant="default">Click = tint</Badge>
           </div>
 
           <ul className="space-y-1">
-            {recentTracks.map((track, index) => (
-              <li
-                key={track.title}
-                className={cn(
-                  'flex items-center gap-3 rounded-[var(--radius-md)] px-2 py-2.5 transition-colors',
-                  index === 0
-                    ? 'bg-[color-mix(in_srgb,var(--module-spotify)_10%,transparent)]'
-                    : 'hover:bg-[var(--surface-muted)]',
-                )}
-              >
-                <span className="w-5 text-center text-xs text-[var(--foreground-subtle)]">
-                  {index === 0 ? (
-                    <Pause className="mx-auto h-3.5 w-3.5 text-[var(--module-spotify)]" />
-                  ) : (
-                    index + 1
-                  )}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{track.title}</p>
-                  <p className="truncate text-xs text-[var(--foreground-muted)]">
-                    {track.artist}
-                  </p>
-                </div>
-                <span className="text-xs text-[var(--foreground-subtle)]">
-                  {track.duration}
-                </span>
-              </li>
-            ))}
+            {MOCK_TRACKS.map((track, index) => {
+              const isActive = track.id === activeTrack.id
+              return (
+                <li key={track.id}>
+                  <button
+                    type="button"
+                    onClick={() => selectTrack(track.id)}
+                    className={cn(
+                      'flex w-full items-center gap-3 rounded-[var(--radius-md)] px-2 py-2.5 text-left transition-colors',
+                      isActive
+                        ? 'bg-[var(--accent-muted)]'
+                        : 'hover:bg-[var(--surface-muted)]',
+                    )}
+                  >
+                    <span className="flex w-5 justify-center">
+                      <span
+                        className="h-2.5 w-2.5 rounded-full"
+                        style={{ background: track.palette.primary }}
+                        aria-hidden
+                      />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{track.title}</p>
+                      <p className="truncate text-xs text-[var(--foreground-muted)]">
+                        {track.artist}
+                      </p>
+                    </div>
+                    <span className="text-xs text-[var(--foreground-subtle)]">
+                      {track.duration}
+                    </span>
+                    <span className="w-4 text-center text-xs text-[var(--foreground-subtle)]">
+                      {index + 1}
+                    </span>
+                  </button>
+                </li>
+              )
+            })}
           </ul>
         </motion.section>
 
-        {/* Playlists + dynamic theme note */}
         <div className="space-y-4">
           <motion.section
             aria-labelledby="playlists-heading"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.16, duration: 0.35 }}
-            className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6"
+            className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-5 transition-[border-color] duration-500 sm:p-6"
           >
             <div className="mb-4 flex items-center gap-2">
-              <Radio className="h-4 w-4 text-[var(--module-spotify)]" />
+              <Radio className="h-4 w-4 text-[var(--accent)]" />
               <h2
                 id="playlists-heading"
                 className="font-display text-base font-semibold"
@@ -200,12 +268,12 @@ export function SpotifyPage() {
               </h2>
             </div>
             <div className="space-y-2">
-              {playlists.map((playlist) => (
+              {MOCK_PLAYLISTS.map((playlist) => (
                 <div
                   key={playlist.name}
-                  className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border)] px-3 py-3"
+                  className="flex items-center gap-3 rounded-[var(--radius-md)] border border-[var(--border)] px-3 py-3 transition-[border-color] duration-500"
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-sm)] bg-[color-mix(in_srgb,var(--module-spotify)_18%,var(--surface-muted))] text-[var(--module-spotify)]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-sm)] bg-[var(--accent-muted)] text-[var(--accent)]">
                     <Music2 className="h-4 w-4" aria-hidden />
                   </div>
                   <div className="min-w-0 flex-1">
@@ -223,15 +291,19 @@ export function SpotifyPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.22, duration: 0.35 }}
-            className="rounded-[var(--radius-xl)] border border-dashed border-[var(--border-strong)] bg-[color-mix(in_srgb,var(--module-spotify)_6%,var(--surface))] p-5"
+            className="rounded-[var(--radius-xl)] border border-dashed border-[var(--border-strong)] bg-[var(--accent-muted)]/40 p-5 transition-[border-color,background-color] duration-500"
           >
-            <p className="text-sm font-medium text-[var(--foreground)]">
-              Tema dinámico preparado
-            </p>
-            <p className="mt-1 text-sm leading-relaxed text-[var(--foreground-muted)]">
-              Cuando conectes Spotify, los colores de la portada actualizarán
-              `--dynamic-primary` y toda Hubify cambiará de atmósfera — sin
-              rediseñar.
+            <div className="mb-2 flex items-center gap-2">
+              <Palette className="h-4 w-4 text-[var(--accent)]" />
+              <p className="text-sm font-medium text-[var(--foreground)]">
+                Demo de tema dinámico
+              </p>
+            </div>
+            <p className="text-sm leading-relaxed text-[var(--foreground-muted)]">
+              Al elegir un track se llama <code className="text-xs">applyAlbumPalette</code>{' '}
+              y se actualizan <code className="text-xs">--dynamic-primary</code>. Bordes,
+              rings y acentos de Header, Dock y cards reaccionan en toda la app.
+              Luego solo hay que sustituir estos mocks por colores reales de la portada.
             </p>
           </motion.aside>
         </div>
