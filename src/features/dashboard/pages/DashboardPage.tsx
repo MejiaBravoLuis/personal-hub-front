@@ -1,215 +1,352 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'motion/react'
 import {
   Music2,
+  Play,
+  Pause,
   ArrowUpRight,
-  Sparkles,
-  Link2,
-  Waves,
+  Bell,
+  GraduationCap,
+  CalendarClock,
+  MessageCircle,
 } from 'lucide-react'
 import { FaInstagram } from 'react-icons/fa'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { Avatar } from '@/components/ui/Avatar'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { ROUTES } from '@/constants'
+import {
+  dashboardCanvas,
+  dashboardInstagram,
+  dashboardReminders,
+  dashboardSpotify,
+} from '@/features/dashboard/data/mockDashboard'
 import { cn } from '@/utils/cn'
 
-const featured = [
-  {
-    title: 'Spotify',
-    path: ROUTES.spotify,
-    eyebrow: 'Música',
-    description:
-      'Escucha, explora y deja que la portada del álbum pinte toda la plataforma.',
-    icon: Music2,
-    tone: 'spotify',
-  },
-  {
-    title: 'Instagram',
-    path: ROUTES.instagram,
-    eyebrow: 'Social',
-    description:
-      'Stories, feed e insights en un módulo limpio, sin salir de Hubify.',
-    icon: FaInstagram,
-    tone: 'instagram',
-  },
-] as const
-
-const upcoming = [
-  { title: 'WhatsApp', hint: 'Mensajería' },
-  { title: 'Canvas', hint: 'Académico' },
-  { title: 'Todos', hint: 'Productividad' },
-  { title: 'Calendario', hint: 'Agenda' },
-] as const
-
 export function DashboardPage() {
+  const [isPlaying, setIsPlaying] = useState(dashboardSpotify.isPlaying)
+  const track = dashboardSpotify.track
+
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <PageHeader
         title="Tu plataforma"
-        description="Hubify concentra tus servicios en módulos independientes. Empieza por música y social — el resto se conecta después."
-        actions={
-          <Badge variant="accent" className="gap-1.5">
-            <Sparkles className="h-3 w-3" aria-hidden />
-            Visual F1.0
-          </Badge>
-        }
+        description="Resumen en vivo de tus módulos. Todo es mock visual — listo para conectar datos reales después."
+        actions={<Badge variant="accent">Solo lectura · F1.0</Badge>}
       />
 
-      {/* Featured modules — primary composition */}
-      <section aria-labelledby="featured-heading" className="space-y-4">
-        <div className="flex items-end justify-between gap-3">
-          <h2
-            id="featured-heading"
-            className="font-display text-lg font-semibold tracking-tight"
-          >
-            Módulos activos
-          </h2>
-          <p className="text-xs text-[var(--foreground-subtle)]">
-            Diseño listo · sin datos reales
-          </p>
-        </div>
-
-        <div className="grid gap-4 lg:grid-cols-2">
-          {featured.map((module, index) => {
-            const Icon = module.icon
-            return (
-              <motion.div
-                key={module.path}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.08, duration: 0.35 }}
-              >
-                <Link
-                  to={module.path}
-                  className={cn(
-                    'group relative block overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] p-6 shadow-[var(--shadow-sm)] transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] sm:p-7',
-                    module.tone === 'spotify' && 'bg-[var(--surface)]',
-                    module.tone === 'instagram' && 'bg-[var(--surface)]',
-                  )}
-                >
-                  <div
-                    className={cn(
-                      'pointer-events-none absolute inset-0 opacity-90',
-                      module.tone === 'spotify' &&
-                        'bg-[radial-gradient(ellipse_at_top_right,color-mix(in_srgb,var(--module-spotify)_22%,transparent),transparent_55%)]',
-                      module.tone === 'instagram' &&
-                        'bg-[radial-gradient(ellipse_at_top_right,color-mix(in_srgb,var(--module-instagram)_20%,transparent),transparent_55%)]',
-                    )}
-                    aria-hidden
-                  />
-
-                  <div className="relative flex h-full flex-col gap-6">
-                    <div className="flex items-start justify-between gap-3">
-                      <div
-                        className={cn(
-                          'flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-[var(--shadow-sm)] transition-transform duration-300 group-hover:scale-105',
-                          module.tone === 'spotify' &&
-                            'bg-[var(--module-spotify)]',
-                          module.tone === 'instagram' &&
-                            'bg-[linear-gradient(135deg,var(--module-instagram-from),var(--module-instagram-to))]',
-                        )}
-                      >
-                        <Icon className="h-5 w-5" aria-hidden />
-                      </div>
-                      <ArrowUpRight className="h-5 w-5 text-[var(--foreground-subtle)] transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-[var(--foreground)]" />
-                    </div>
-
-                    <div className="space-y-2">
-                      <p className="text-xs font-medium tracking-wide text-[var(--foreground-muted)] uppercase">
-                        {module.eyebrow}
-                      </p>
-                      <h3 className="font-display text-2xl font-semibold tracking-tight">
-                        {module.title}
-                      </h3>
-                      <p className="max-w-sm text-sm leading-relaxed text-[var(--foreground-muted)]">
-                        {module.description}
-                      </p>
-                    </div>
-
-                    <div className="mt-auto flex items-center gap-2 pt-2">
-                      <Badge variant="default">Sin conectar</Badge>
-                      <span className="text-xs text-[var(--foreground-subtle)]">
-                        OAuth del usuario
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            )
-          })}
-        </div>
-      </section>
-
-      {/* Platform strip */}
+      {/* Spotify + Instagram */}
       <section
-        aria-labelledby="hub-heading"
-        className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]"
+        aria-label="Música y social"
+        className="grid gap-4 lg:grid-cols-2"
       >
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
+        {/* Spotify — now playing / resume */}
+        <motion.article
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.16, duration: 0.35 }}
-          className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7"
+          transition={{ duration: 0.35 }}
+          className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6"
         >
-          <div className="relative z-10 max-w-lg space-y-4">
-            <div className="flex items-center gap-2 text-[var(--accent)]">
-              <Waves className="h-4 w-4" aria-hidden />
-              <span className="text-xs font-medium tracking-wide uppercase">
-                Hubify
-              </span>
-            </div>
-            <h2
-              id="hub-heading"
-              className="font-display text-2xl font-semibold tracking-tight sm:text-3xl"
-            >
-              Un solo lugar. Muchos servicios.
-            </h2>
-            <p className="text-sm leading-relaxed text-[var(--foreground-muted)]">
-              Cada integración es un módulo con la misma arquitectura. Tú
-              conectas tus cuentas; Hubify nunca embebe API Keys en el código.
-            </p>
-            <div className="flex flex-wrap gap-2 pt-1">
-              <Button variant="primary" disabled>
-                <Link2 className="h-4 w-4" aria-hidden />
-                Conectar módulos
-              </Button>
-              <Button variant="ghost" disabled>
-                Ver arquitectura
-              </Button>
-            </div>
-          </div>
           <div
-            className="pointer-events-none absolute -right-8 -bottom-12 h-44 w-44 rounded-full bg-[color-mix(in_srgb,var(--accent)_18%,transparent)] blur-3xl"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,color-mix(in_srgb,var(--module-spotify)_20%,transparent),transparent_55%)]"
             aria-hidden
           />
-        </motion.div>
 
-        <motion.div
+          <div className="relative flex h-full flex-col gap-5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--module-spotify)] text-white">
+                  <Music2 className="h-4 w-4" aria-hidden />
+                </div>
+                <div>
+                  <p className="text-xs font-medium tracking-wide text-[var(--module-spotify)] uppercase">
+                    Spotify
+                  </p>
+                  <p className="text-sm font-semibold text-[var(--foreground)]">
+                    {isPlaying ? 'Reproduciendo ahora' : 'Reanudar'}
+                  </p>
+                </div>
+              </div>
+              <Link
+                to={dashboardSpotify.path}
+                className="inline-flex items-center gap-1 text-xs font-medium text-[var(--foreground-muted)] transition-colors hover:text-[var(--foreground)]"
+              >
+                Abrir
+                <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+              </Link>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div
+                className="h-20 w-20 shrink-0 rounded-[var(--radius-md)] shadow-[var(--shadow-md)] sm:h-24 sm:w-24"
+                style={{
+                  background: `linear-gradient(145deg, ${track.palette.primary}, ${track.palette.secondary})`,
+                }}
+                aria-hidden
+              />
+              <div className="min-w-0 flex-1 space-y-3">
+                <div>
+                  <h3 className="font-display truncate text-xl font-semibold tracking-tight">
+                    {track.title}
+                  </h3>
+                  <p className="truncate text-sm text-[var(--foreground-muted)]">
+                    {track.artist} · {track.album}
+                  </p>
+                </div>
+
+                <div className="space-y-1.5" aria-hidden>
+                  <div className="h-1 overflow-hidden rounded-full bg-[var(--surface-muted)]">
+                    <div
+                      className="h-full rounded-full bg-[var(--module-spotify)] transition-[width] duration-500"
+                      style={{ width: `${track.progress * 100}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-[11px] text-[var(--foreground-subtle)]">
+                    <span>{isPlaying ? 'En curso' : 'Pausado'}</span>
+                    <span>{track.duration}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-auto flex items-center gap-2">
+              <Button
+                size="sm"
+                className="rounded-full bg-[var(--module-spotify)] text-white hover:bg-[var(--module-spotify)] hover:opacity-90"
+                onClick={() => setIsPlaying((value) => !value)}
+                aria-label={isPlaying ? 'Pausar' : 'Reanudar reproducción'}
+              >
+                {isPlaying ? (
+                  <>
+                    <Pause className="h-4 w-4 fill-current" />
+                    Pausar
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4 fill-current" />
+                    Reanudar
+                  </>
+                )}
+              </Button>
+              <Badge variant="default">Mock</Badge>
+            </div>
+          </div>
+        </motion.article>
+
+        {/* Instagram — unread messages */}
+        <motion.article
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.06, duration: 0.35 }}
+          className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)] sm:p-6"
+        >
+          <div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,color-mix(in_srgb,var(--module-instagram-from)_16%,transparent),transparent_55%)]"
+            aria-hidden
+          />
+
+          <div className="relative flex h-full flex-col gap-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--module-instagram-from),var(--module-instagram-to))] text-white">
+                  <FaInstagram className="h-4 w-4" aria-hidden />
+                </div>
+                <div>
+                  <p className="text-xs font-medium tracking-wide text-[var(--foreground-muted)] uppercase">
+                    Instagram
+                  </p>
+                  <p className="text-sm font-semibold">Mensajes</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant="accent"
+                  className="bg-[color-mix(in_srgb,var(--module-instagram-to)_18%,transparent)] text-[var(--module-instagram-to)]"
+                >
+                  {dashboardInstagram.unreadCount} sin leer
+                </Badge>
+                <Link
+                  to={dashboardInstagram.path}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-[var(--foreground-muted)] transition-colors hover:text-[var(--foreground)]"
+                >
+                  Abrir
+                  <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+                </Link>
+              </div>
+            </div>
+
+            <ul className="space-y-1">
+              {dashboardInstagram.messages.map((message) => (
+                <li key={message.id}>
+                  <Link
+                    to={dashboardInstagram.path}
+                    className="flex items-center gap-3 rounded-[var(--radius-md)] px-2 py-2.5 transition-colors hover:bg-[var(--surface-muted)]"
+                  >
+                    <Avatar fallback={message.from.slice(0, 2)} size="sm" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="truncate text-sm font-medium">
+                          {message.from}
+                        </p>
+                        <span className="shrink-0 text-[11px] text-[var(--foreground-subtle)]">
+                          {message.time}
+                        </span>
+                      </div>
+                      <p className="truncate text-xs text-[var(--foreground-muted)]">
+                        {message.preview}
+                      </p>
+                    </div>
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full bg-[var(--module-instagram-to)]"
+                      aria-label="Sin leer"
+                    />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            <p className="mt-auto flex items-center gap-1.5 text-xs text-[var(--foreground-subtle)]">
+              <MessageCircle className="h-3.5 w-3.5" aria-hidden />
+              Vista previa · sin OAuth
+            </p>
+          </div>
+        </motion.article>
+      </section>
+
+      {/* Reminders + Canvas tasks */}
+      <section
+        aria-label="Recordatorios y Canvas"
+        className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]"
+      >
+        {/* Reminders — read only */}
+        <motion.article
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.22, duration: 0.35 }}
-          className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-6"
+          transition={{ delay: 0.12, duration: 0.35 }}
+          className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6"
         >
-          <h2 className="font-display mb-4 text-base font-semibold">
-            Próximos módulos
-          </h2>
-          <ul className="space-y-3">
-            {upcoming.map((item) => (
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Bell className="h-4 w-4 text-[var(--accent)]" />
+              <h2 className="font-display text-base font-semibold">
+                Recordatorios
+              </h2>
+            </div>
+            <Badge variant="default">Solo lectura</Badge>
+          </div>
+
+          <ul className="space-y-2">
+            {dashboardReminders.map((reminder) => (
               <li
-                key={item.title}
-                className="flex items-center justify-between gap-3 border-b border-[var(--border)] pb-3 last:border-b-0 last:pb-0"
+                key={reminder.id}
+                className="rounded-[var(--radius-md)] border border-[var(--border)] px-3 py-3"
               >
-                <span className="text-sm font-medium text-[var(--foreground)]">
-                  {item.title}
-                </span>
-                <span className="text-xs text-[var(--foreground-subtle)]">
-                  {item.hint}
-                </span>
+                <p className="text-sm font-medium text-[var(--foreground)]">
+                  {reminder.title}
+                </p>
+                <div className="mt-1 flex items-center justify-between gap-2 text-xs text-[var(--foreground-muted)]">
+                  <span className="inline-flex items-center gap-1">
+                    <CalendarClock className="h-3 w-3" aria-hidden />
+                    {reminder.when}
+                  </span>
+                  <span>{reminder.source}</span>
+                </div>
               </li>
             ))}
           </ul>
-        </motion.div>
+
+          <p className="mt-4 text-xs text-[var(--foreground-subtle)]">
+            Sin edición en este sprint. Solo muestra lo pendiente.
+          </p>
+        </motion.article>
+
+        {/* Canvas preview → tasks */}
+        <motion.article
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18, duration: 0.35 }}
+          className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6"
+        >
+          <div
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_100%_0%,color-mix(in_srgb,var(--module-canvas)_14%,transparent),transparent_50%)]"
+            aria-hidden
+          />
+
+          <div className="relative">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--module-canvas)] text-white">
+                  <GraduationCap className="h-4 w-4" aria-hidden />
+                </div>
+                <div>
+                  <p className="text-xs font-medium tracking-wide text-[var(--module-canvas)] uppercase">
+                    Canvas
+                  </p>
+                  <h2 className="font-display text-base font-semibold">
+                    Tareas próximas
+                  </h2>
+                </div>
+              </div>
+              <Link
+                to={dashboardCanvas.path}
+                className="inline-flex items-center gap-1 text-xs font-medium text-[var(--foreground-muted)] transition-colors hover:text-[var(--foreground)]"
+              >
+                Ver curso
+                <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+              </Link>
+            </div>
+
+            <p className="mb-4 text-sm text-[var(--foreground-muted)]">
+              {dashboardCanvas.course}
+            </p>
+
+            <ul className="space-y-2">
+              {dashboardCanvas.tasks.map((task) => (
+                <li
+                  key={task.id}
+                  className={cn(
+                    'flex items-center justify-between gap-3 rounded-[var(--radius-md)] border px-3 py-3',
+                    task.urgent
+                      ? 'border-[color-mix(in_srgb,var(--module-canvas)_40%,var(--border))] bg-[color-mix(in_srgb,var(--module-canvas)_6%,transparent)]'
+                      : 'border-[var(--border)]',
+                  )}
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{task.title}</p>
+                    <p className="mt-0.5 text-xs text-[var(--foreground-muted)]">
+                      Entrega · {task.due}
+                    </p>
+                  </div>
+                  {task.urgent ? (
+                    <Badge
+                      variant="danger"
+                      className="shrink-0"
+                    >
+                      Hoy
+                    </Badge>
+                  ) : (
+                    <Badge variant="default" className="shrink-0">
+                      Pendiente
+                    </Badge>
+                  )}
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-5 flex items-center justify-between gap-3 border-t border-[var(--border)] pt-4">
+              <p className="text-xs text-[var(--foreground-subtle)]">
+                Preview conectada a entregas del módulo Canvas
+              </p>
+              <Link
+                to={dashboardCanvas.path}
+                className="inline-flex h-8 items-center rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface-muted)] px-3 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--surface-hover)]"
+              >
+                Abrir Canvas
+              </Link>
+            </div>
+          </div>
+        </motion.article>
       </section>
     </div>
   )
