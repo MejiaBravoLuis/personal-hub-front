@@ -7,7 +7,11 @@ import { ROUTES } from '@/constants'
 import { cn } from '@/utils/cn'
 
 /** Modules that own the full viewport between header and dock */
-const FULL_BLEED_ROUTES = new Set<string>([ROUTES.whatsapp, ROUTES.spotify])
+const FULL_BLEED_ROUTES = new Set<string>([
+  ROUTES.whatsapp,
+  ROUTES.spotify,
+  ROUTES.instagram,
+])
 
 export function AppLayout() {
   const location = useLocation()

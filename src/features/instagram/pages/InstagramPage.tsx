@@ -1,259 +1,163 @@
-import { motion } from 'motion/react'
-import { Heart, MessageCircle, Send, Bookmark, Grid3X3, Film } from 'lucide-react'
-import { FaInstagram } from 'react-icons/fa'
+import { useState } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
-import { Avatar } from '@/components/ui/Avatar'
-import { PageHeader } from '@/components/layout/PageHeader'
+import {
+  InstagramNav,
+  InstagramNavToggle,
+} from '@/features/instagram/components/InstagramNav'
+import { InstagramHome } from '@/features/instagram/components/InstagramHome'
+import { InstagramSearch } from '@/features/instagram/components/InstagramSearch'
+import { InstagramMessages } from '@/features/instagram/components/InstagramMessages'
+import { InstagramProfile } from '@/features/instagram/components/InstagramProfile'
+import {
+  IG_MESSAGES,
+  type InstagramView,
+} from '@/features/instagram/data/mockInstagram'
 import { cn } from '@/utils/cn'
 
-const stories = [
-  { id: '1', label: 'Tú', self: true },
-  { id: '2', label: 'maya' },
-  { id: '3', label: 'leo' },
-  { id: '4', label: 'studio' },
-  { id: '5', label: 'nova' },
-  { id: '6', label: 'kai' },
+const NAV_STORAGE_KEY = 'hubify-instagram-nav-open'
+
+const mobileTabs: { id: InstagramView; label: string }[] = [
+  { id: 'home', label: 'Inicio' },
+  { id: 'search', label: 'Buscar' },
+  { id: 'messages', label: 'Msgs' },
+  { id: 'profile', label: 'Perfil' },
 ]
 
-const feed = [
-  {
-    id: '1',
-    user: 'studio.light',
-    caption: 'Morning light studies · #design',
-    likes: '2.4k',
-  },
-  {
-    id: '2',
-    user: 'urban.frames',
-    caption: 'City grain after rain',
-    likes: '891',
-  },
-  {
-    id: '3',
-    user: 'soft.archive',
-    caption: 'Quiet corners',
-    likes: '1.1k',
-  },
-]
-
-const gridPlaceholders = Array.from({ length: 6 }, (_, i) => i)
+function readNavOpen() {
+  const stored = localStorage.getItem(NAV_STORAGE_KEY)
+  if (stored === null) return true
+  return stored === 'true'
+}
 
 export function InstagramPage() {
+  const [view, setView] = useState<InstagramView>('home')
+  const [navOpen, setNavOpen] = useState(() =>
+    typeof window === 'undefined' ? true : readNavOpen(),
+  )
+
+  const unread = IG_MESSAGES.filter((m) => m.unread).length
+
+  const toggleNav = () => {
+    setNavOpen((open) => {
+      const next = !open
+      localStorage.setItem(NAV_STORAGE_KEY, String(next))
+      return next
+    })
+  }
+
   return (
-    <div data-module="instagram" className="space-y-8">
-      <PageHeader
-        title="Instagram"
-        description="Feed, stories e insights en un módulo Hubify. Todo es mock visual por ahora."
-        actions={
-          <div className="flex items-center gap-2">
-            <Badge variant="default">Sin conectar</Badge>
-            <Button variant="secondary" size="sm" disabled>
-              Conectar cuenta
-            </Button>
-          </div>
-        }
+    <div
+      data-module="instagram"
+      className="flex min-h-0 flex-1 flex-col gap-2 lg:flex-row lg:gap-3"
+    >
+      <InstagramNav
+        view={view}
+        onChange={setView}
+        unreadCount={unread}
+        open={navOpen}
+        onToggle={toggleNav}
       />
 
-      {/* Profile strip */}
-      <motion.section
-        aria-labelledby="ig-profile-heading"
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35 }}
-        className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7"
-      >
+      <section className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)]">
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_0%_0%,color-mix(in_srgb,var(--module-instagram-from)_18%,transparent),transparent_50%),radial-gradient(ellipse_at_100%_0%,color-mix(in_srgb,var(--module-instagram-to)_16%,transparent),transparent_45%)]"
+          className="pointer-events-none absolute inset-0 opacity-80"
+          style={{
+            background: `
+              radial-gradient(ellipse at 0% 0%, color-mix(in srgb, var(--module-instagram-from) 14%, transparent), transparent 50%),
+              radial-gradient(ellipse at 100% 0%, color-mix(in srgb, var(--module-instagram-to) 12%, transparent), transparent 45%)
+            `,
+          }}
           aria-hidden
         />
 
-        <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center">
-          <div className="relative shrink-0">
-            <div className="rounded-full bg-[linear-gradient(135deg,var(--module-instagram-from),var(--module-instagram-to))] p-[2.5px]">
-              <div className="rounded-full bg-[var(--surface)] p-0.5">
-                <Avatar fallback="HU" size="lg" />
-              </div>
-            </div>
-          </div>
-
-          <div className="min-w-0 flex-1 space-y-3">
-            <div>
-              <h2
-                id="ig-profile-heading"
-                className="font-display text-xl font-semibold tracking-tight"
-              >
-                hubify.user
-              </h2>
-              <p className="text-sm text-[var(--foreground-muted)]">
-                Perfil simulado · sin OAuth
+        <header className="relative z-20 flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--surface)]/80 px-4 py-3 backdrop-blur sm:px-5">
+          <div className="flex min-w-0 items-center gap-2">
+            <InstagramNavToggle open={navOpen} onToggle={toggleNav} />
+            <div className="min-w-0">
+              <p className="text-xs font-medium tracking-wide text-[var(--module-instagram-to)] uppercase">
+                Instagram
+              </p>
+              <p className="truncate text-sm text-[var(--foreground-muted)]">
+                {view === 'home' && 'Feed y stories'}
+                {view === 'search' && 'Explorar y buscar'}
+                {view === 'messages' && 'Mensajes directos'}
+                {view === 'profile' && 'Tu perfil mock'}
               </p>
             </div>
-
-            <div className="flex flex-wrap gap-6 text-sm">
-              <div>
-                <span className="font-semibold text-[var(--foreground)]">128</span>
-                <span className="ml-1 text-[var(--foreground-muted)]">posts</span>
-              </div>
-              <div>
-                <span className="font-semibold text-[var(--foreground)]">4.2k</span>
-                <span className="ml-1 text-[var(--foreground-muted)]">
-                  followers
-                </span>
-              </div>
-              <div>
-                <span className="font-semibold text-[var(--foreground)]">310</span>
-                <span className="ml-1 text-[var(--foreground-muted)]">
-                  following
-                </span>
-              </div>
-            </div>
           </div>
 
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,var(--module-instagram-from),var(--module-instagram-to))] text-white shadow-[var(--shadow-sm)]">
-            <FaInstagram className="h-5 w-5" aria-hidden />
+          <div className="flex items-center gap-2">
+            {unread > 0 ? (
+              <Badge
+                variant="accent"
+                className="bg-[color-mix(in_srgb,var(--module-instagram-to)_18%,transparent)] text-[var(--module-instagram-to)]"
+              >
+                {unread} msgs
+              </Badge>
+            ) : null}
+            <Button variant="secondary" size="sm" disabled>
+              Conectar
+            </Button>
           </div>
-        </div>
-      </motion.section>
+        </header>
 
-      {/* Stories */}
-      <motion.section
-        aria-label="Stories"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.08, duration: 0.35 }}
-      >
-        <ul className="flex gap-4 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {stories.map((story) => (
-            <li
-              key={story.id}
-              className="flex w-16 shrink-0 flex-col items-center gap-1.5"
-            >
-              <div
+        {/* Mobile tabs */}
+        <div className="relative z-10 border-b border-[var(--border)] px-2 py-2 lg:hidden">
+          <div
+            role="tablist"
+            aria-label="Vistas Instagram"
+            className="flex gap-1 rounded-[var(--radius-full)] border border-[var(--border)] bg-[var(--surface-muted)] p-1"
+          >
+            {mobileTabs.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={view === tab.id}
+                onClick={() => setView(tab.id)}
                 className={cn(
-                  'rounded-full p-[2px]',
-                  story.self
-                    ? 'bg-[var(--border-strong)]'
-                    : 'bg-[linear-gradient(135deg,var(--module-instagram-from),var(--module-instagram-to))]',
+                  'relative flex-1 rounded-[var(--radius-full)] px-2 py-1.5 text-xs font-medium transition-colors',
+                  view === tab.id
+                    ? 'bg-[var(--surface)] text-[var(--foreground)] shadow-[var(--shadow-sm)]'
+                    : 'text-[var(--foreground-muted)]',
                 )}
               >
-                <div className="rounded-full bg-[var(--background)] p-0.5">
-                  <Avatar
-                    fallback={story.label.slice(0, 2)}
-                    size="md"
-                    className="!h-14 !w-14"
-                  />
-                </div>
-              </div>
-              <span className="w-full truncate text-center text-[11px] text-[var(--foreground-muted)]">
-                {story.label}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </motion.section>
-
-      <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-        {/* Feed preview */}
-        <motion.section
-          aria-labelledby="feed-heading"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.14, duration: 0.35 }}
-          className="space-y-4"
-        >
-          <div className="flex items-center justify-between">
-            <h2 id="feed-heading" className="font-display text-base font-semibold">
-              Feed
-            </h2>
-            <Badge variant="default">Mock</Badge>
+                {tab.label}
+                {tab.id === 'messages' && unread > 0 ? (
+                  <span className="ml-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-[var(--module-instagram-to)] px-1 text-[9px] text-white">
+                    {unread}
+                  </span>
+                ) : null}
+              </button>
+            ))}
           </div>
-
-          {feed.map((post, index) => (
-            <article
-              key={post.id}
-              className="overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)]"
-            >
-              <div className="flex items-center gap-3 px-4 py-3">
-                <Avatar fallback={post.user.slice(0, 2)} size="sm" />
-                <p className="text-sm font-medium">{post.user}</p>
-              </div>
-
-              <div
-                className={cn(
-                  'aspect-[4/3] w-full',
-                  index % 2 === 0
-                    ? 'bg-[linear-gradient(145deg,color-mix(in_srgb,var(--module-instagram-from)_35%,var(--surface-muted)),var(--surface-muted))]'
-                    : 'bg-[linear-gradient(145deg,color-mix(in_srgb,var(--module-instagram-to)_30%,var(--surface-muted)),var(--surface-muted))]',
-                )}
-                aria-hidden
-              />
-
-              <div className="space-y-2 px-4 py-3">
-                <div className="flex items-center gap-3 text-[var(--foreground)]">
-                  <Heart className="h-5 w-5" aria-hidden />
-                  <MessageCircle className="h-5 w-5" aria-hidden />
-                  <Send className="h-5 w-5" aria-hidden />
-                  <Bookmark className="ml-auto h-5 w-5" aria-hidden />
-                </div>
-                <p className="text-sm font-medium">{post.likes} likes</p>
-                <p className="text-sm text-[var(--foreground-muted)]">
-                  <span className="font-medium text-[var(--foreground)]">
-                    {post.user}
-                  </span>{' '}
-                  {post.caption}
-                </p>
-              </div>
-            </article>
-          ))}
-        </motion.section>
-
-        {/* Grid + insights */}
-        <div className="space-y-4">
-          <motion.section
-            aria-labelledby="grid-heading"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.18, duration: 0.35 }}
-            className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-5"
-          >
-            <div className="mb-4 flex items-center gap-2">
-              <Grid3X3 className="h-4 w-4 text-[var(--module-instagram-from)]" />
-              <h2 id="grid-heading" className="font-display text-base font-semibold">
-                Cuadrícula
-              </h2>
-            </div>
-            <div className="grid grid-cols-3 gap-1.5">
-              {gridPlaceholders.map((item) => (
-                <div
-                  key={item}
-                  className="aspect-square rounded-[var(--radius-sm)] bg-[var(--surface-muted)]"
-                  style={{
-                    background: `linear-gradient(135deg, color-mix(in srgb, var(--module-instagram-from) ${12 + item * 6}%, var(--surface-muted)), color-mix(in srgb, var(--module-instagram-to) ${10 + item * 4}%, var(--surface-muted)))`,
-                  }}
-                  aria-hidden
-                />
-              ))}
-            </div>
-          </motion.section>
-
-          <motion.aside
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.24, duration: 0.35 }}
-            className="rounded-[var(--radius-xl)] border border-dashed border-[var(--border-strong)] bg-[color-mix(in_srgb,var(--module-instagram-from)_6%,var(--surface))] p-5"
-          >
-            <div className="mb-2 flex items-center gap-2">
-              <Film className="h-4 w-4 text-[var(--module-instagram-to)]" />
-              <p className="text-sm font-medium">Insights después</p>
-            </div>
-            <p className="text-sm leading-relaxed text-[var(--foreground-muted)]">
-              Alcance, guardados y mejores horarios vivirán aquí cuando el
-              usuario conecte su propia cuenta — nunca con keys del proyecto.
-            </p>
-          </motion.aside>
         </div>
-      </div>
+
+        <div
+          className={cn(
+            'relative z-10 min-h-0 flex-1 p-2 sm:p-3',
+            view === 'messages' ? 'overflow-hidden' : 'overflow-y-auto',
+          )}
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={view}
+              className={cn('h-full', view === 'messages' && 'min-h-0')}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2 }}
+            >
+              {view === 'home' ? <InstagramHome /> : null}
+              {view === 'search' ? <InstagramSearch /> : null}
+              {view === 'messages' ? <InstagramMessages /> : null}
+              {view === 'profile' ? <InstagramProfile /> : null}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </section>
     </div>
   )
 }
