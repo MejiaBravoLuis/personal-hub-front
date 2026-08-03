@@ -1,2 +1,6 @@
 export { LoginPage } from './pages/LoginPage'
 export { RegisterPage } from './pages/RegisterPage'
+export { AuthBootstrap } from './components/AuthBootstrap'
+export { ProtectedRoute } from './components/ProtectedRoute'
+export { GuestRoute } from './components/GuestRoute'
+export { useAuthStore } from './store/auth.store'

@@ -1,27 +1,19 @@
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { ROUTES } from '@/constants'
-
-const registerSchema = z
-  .object({
-    name: z.string().min(2, 'Ingresa tu nombre'),
-    email: z.email('Ingresa un correo válido'),
-    password: z.string().min(6, 'Mínimo 6 caracteres'),
-    confirmPassword: z.string().min(6, 'Confirma tu contraseña'),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Las contraseñas no coinciden',
-    path: ['confirmPassword'],
-  })
-
-type RegisterValues = z.infer<typeof registerSchema>
+import { getApiErrorMessage } from '@/services/api'
+import { registerSchema, type RegisterValues } from '../schemas'
+import { useAuthStore } from '../store/auth.store'
 
 export function RegisterPage() {
   const navigate = useNavigate()
+  const registerUser = useAuthStore((s) => s.register)
+  const [formError, setFormError] = useState<string | null>(null)
+
   const {
     register,
     handleSubmit,
@@ -29,16 +21,29 @@ export function RegisterPage() {
   } = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      name: '',
+      firstName: '',
+      lastName: '',
+      username: '',
       email: '',
       password: '',
       confirmPassword: '',
     },
   })
 
-  const onSubmit = async (_values: RegisterValues) => {
-    await new Promise((resolve) => setTimeout(resolve, 450))
-    navigate(ROUTES.dashboard)
+  const onSubmit = async (values: RegisterValues) => {
+    setFormError(null)
+    try {
+      await registerUser({
+        firstName: values.firstName.trim(),
+        lastName: values.lastName.trim(),
+        username: values.username.trim().toLowerCase(),
+        email: values.email.trim().toLowerCase(),
+        password: values.password,
+      })
+      navigate(ROUTES.login, { replace: true, state: { registered: true } })
+    } catch (error) {
+      setFormError(getApiErrorMessage(error, 'No se pudo crear la cuenta'))
+    }
   }
 
   return (
@@ -48,17 +53,33 @@ export function RegisterPage() {
           Crea tu cuenta
         </h2>
         <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-          Empieza a centralizar tus servicios. Sin APIs reales en este sprint.
+          Empieza a centralizar tus servicios en Hubify.
         </p>
       </div>
 
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Input
+            label="Nombre"
+            autoComplete="given-name"
+            placeholder="José"
+            error={errors.firstName?.message}
+            {...register('firstName')}
+          />
+          <Input
+            label="Apellido"
+            autoComplete="family-name"
+            placeholder="Rodas"
+            error={errors.lastName?.message}
+            {...register('lastName')}
+          />
+        </div>
         <Input
-          label="Nombre"
-          autoComplete="name"
-          placeholder="Tu nombre"
-          error={errors.name?.message}
-          {...register('name')}
+          label="Usuario"
+          autoComplete="username"
+          placeholder="jrodas"
+          error={errors.username?.message}
+          {...register('username')}
         />
         <Input
           label="Correo"
@@ -72,7 +93,7 @@ export function RegisterPage() {
           label="Contraseña"
           type="password"
           autoComplete="new-password"
-          placeholder="••••••••"
+          placeholder="Mínimo 8 caracteres"
           error={errors.password?.message}
           {...register('password')}
         />
@@ -84,6 +105,13 @@ export function RegisterPage() {
           error={errors.confirmPassword?.message}
           {...register('confirmPassword')}
         />
+
+        {formError ? (
+          <p className="text-sm text-[var(--danger)]" role="alert">
+            {formError}
+          </p>
+        ) : null}
+
         <Button type="submit" className="w-full" loading={isSubmitting}>
           Crear cuenta
         </Button>

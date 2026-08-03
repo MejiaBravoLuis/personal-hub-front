@@ -5,6 +5,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Button } from '@/components/ui/Button'
 import { Dropdown } from '@/components/ui/Dropdown'
 import { Search } from '@/components/ui/Search'
+import { useAuthStore } from '@/features/auth'
 import { useTheme } from '@/providers'
 import type { ThemeMode } from '@/themes/theme'
 import { cn } from '@/utils/cn'
@@ -13,9 +14,19 @@ type AppHeaderProps = {
   className?: string
 }
 
+function initials(firstName?: string, lastName?: string, username?: string) {
+  const a = firstName?.trim()?.[0]
+  const b = lastName?.trim()?.[0]
+  if (a && b) return `${a}${b}`
+  if (a) return a
+  return username?.slice(0, 2) || 'HU'
+}
+
 export function AppHeader({ className }: AppHeaderProps) {
   const navigate = useNavigate()
   const { mode, setMode } = useTheme()
+  const user = useAuthStore((s) => s.user)
+  const logout = useAuthStore((s) => s.logout)
 
   const themeIcon =
     mode === 'dark' ? (
@@ -30,6 +41,11 @@ export function AppHeader({ className }: AppHeaderProps) {
     const order: ThemeMode[] = ['light', 'dark', 'system']
     const next = order[(order.indexOf(mode) + 1) % order.length]
     setMode(next)
+  }
+
+  const handleLogout = async () => {
+    await logout()
+    navigate(ROUTES.login, { replace: true })
   }
 
   return (
@@ -81,12 +97,19 @@ export function AppHeader({ className }: AppHeaderProps) {
                 id: 'logout',
                 label: 'Cerrar sesión',
                 danger: true,
-                onSelect: () => navigate(ROUTES.login),
+                onSelect: () => {
+                  void handleLogout()
+                },
               },
             ]}
             trigger={
               <Avatar
-                fallback="HU"
+                src={user?.avatar ?? undefined}
+                fallback={initials(
+                  user?.firstName,
+                  user?.lastName,
+                  user?.username,
+                )}
                 size="sm"
                 className="cursor-pointer transition-transform hover:scale-105"
               />

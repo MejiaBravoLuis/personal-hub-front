@@ -1,5 +1,2 @@
-/**
- * User store — deferred. Auth is simulated in F1.0.
- */
-
-export {}
+/** Prefer `useAuthStore` from `@/features/auth` for session/user state. */
+export { useAuthStore as useUserStore } from '@/features/auth'

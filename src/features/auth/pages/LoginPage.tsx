@@ -1,32 +1,44 @@
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { ROUTES } from '@/constants'
-
-const loginSchema = z.object({
-  email: z.email('Ingresa un correo válido'),
-  password: z.string().min(6, 'Mínimo 6 caracteres'),
-})
-
-type LoginValues = z.infer<typeof loginSchema>
+import { getApiErrorMessage } from '@/services/api'
+import { loginSchema, toLoginPayload, type LoginValues } from '../schemas'
+import { useAuthStore } from '../store/auth.store'
 
 export function LoginPage() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const login = useAuthStore((s) => s.login)
+  const [formError, setFormError] = useState<string | null>(null)
+
+  const registeredMessage =
+    (location.state as { registered?: boolean } | null)?.registered === true
+      ? 'Cuenta creada. Ya puedes iniciar sesión.'
+      : null
+
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { identifier: '', password: '' },
   })
 
-  const onSubmit = async (_values: LoginValues) => {
-    await new Promise((resolve) => setTimeout(resolve, 450))
-    navigate(ROUTES.dashboard)
+  const onSubmit = async (values: LoginValues) => {
+    setFormError(null)
+    try {
+      await login(toLoginPayload(values))
+      const from =
+        (location.state as { from?: string } | null)?.from || ROUTES.dashboard
+      navigate(from, { replace: true })
+    } catch (error) {
+      setFormError(getApiErrorMessage(error, 'No se pudo iniciar sesión'))
+    }
   }
 
   return (
@@ -36,18 +48,26 @@ export function LoginPage() {
           Bienvenido de nuevo
         </h2>
         <p className="mt-1 text-sm text-[var(--foreground-muted)]">
-          Entra a tu espacio Hubify. La autenticación real llegará más adelante.
+          Entra con tu correo o usuario de Hubify.
         </p>
       </div>
 
+      {registeredMessage ? (
+        <p
+          className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)]"
+          role="status"
+        >
+          {registeredMessage}
+        </p>
+      ) : null}
+
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
         <Input
-          label="Correo"
-          type="email"
-          autoComplete="email"
-          placeholder="tu@email.com"
-          error={errors.email?.message}
-          {...register('email')}
+          label="Correo o usuario"
+          autoComplete="username"
+          placeholder="tu@email.com o usuario"
+          error={errors.identifier?.message}
+          {...register('identifier')}
         />
         <Input
           label="Contraseña"
@@ -57,6 +77,13 @@ export function LoginPage() {
           error={errors.password?.message}
           {...register('password')}
         />
+
+        {formError ? (
+          <p className="text-sm text-[var(--danger)]" role="alert">
+            {formError}
+          </p>
+        ) : null}
+
         <Button type="submit" className="w-full" loading={isSubmitting}>
           Iniciar sesión
         </Button>
