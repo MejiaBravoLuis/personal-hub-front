@@ -1,166 +1,216 @@
 import { Link } from 'react-router-dom'
+import { motion } from 'motion/react'
 import {
   Music2,
-  MessageCircle,
-  GraduationCap,
-  CheckSquare,
-  CalendarDays,
-  Bell,
-  Activity,
   ArrowUpRight,
+  Sparkles,
+  Link2,
+  Waves,
 } from 'lucide-react'
 import { FaInstagram } from 'react-icons/fa'
 import { Badge } from '@/components/ui/Badge'
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
 import { PageHeader } from '@/components/layout/PageHeader'
-import { Section } from '@/components/layout/Container'
 import { ROUTES } from '@/constants'
+import { cn } from '@/utils/cn'
 
-const modules = [
+const featured = [
   {
     title: 'Spotify',
-    description: 'Reproduce, explora y sincroniza tu música.',
     path: ROUTES.spotify,
+    eyebrow: 'Música',
+    description:
+      'Escucha, explora y deja que la portada del álbum pinte toda la plataforma.',
     icon: Music2,
-    status: 'Próximamente',
+    tone: 'spotify',
   },
   {
     title: 'Instagram',
-    description: 'Publicaciones, stories e insights en un módulo.',
     path: ROUTES.instagram,
+    eyebrow: 'Social',
+    description:
+      'Stories, feed e insights en un módulo limpio, sin salir de Hubify.',
     icon: FaInstagram,
-    status: 'Próximamente',
-  },
-  {
-    title: 'WhatsApp',
-    description: 'Conversaciones y contactos desde Hubify.',
-    path: ROUTES.whatsapp,
-    icon: MessageCircle,
-    status: 'Próximamente',
-  },
-  {
-    title: 'Canvas LMS',
-    description: 'Cursos, tareas y calendario académico.',
-    path: ROUTES.canvas,
-    icon: GraduationCap,
-    status: 'Próximamente',
-  },
-  {
-    title: 'Todos',
-    description: 'Tareas y prioridades en un solo flujo.',
-    path: ROUTES.todos,
-    icon: CheckSquare,
-    status: 'Vista previa',
-  },
-  {
-    title: 'Calendario',
-    description: 'Agenda unificada de todos tus módulos.',
-    path: ROUTES.calendar,
-    icon: CalendarDays,
-    status: 'Vista previa',
+    tone: 'instagram',
   },
 ] as const
 
-const activity = [
-  'Spotify se conectará mediante OAuth del usuario',
-  'Canvas usará API Keys personales — nunca embebidas',
-  'El tema dinámico tomará colores de portadas de álbum',
-  'Cada integración vivirá como feature modular independiente',
-]
+const upcoming = [
+  { title: 'WhatsApp', hint: 'Mensajería' },
+  { title: 'Canvas', hint: 'Académico' },
+  { title: 'Todos', hint: 'Productividad' },
+  { title: 'Calendario', hint: 'Agenda' },
+] as const
 
 export function DashboardPage() {
   return (
-    <div>
+    <div className="space-y-10">
       <PageHeader
-        title="Centro de control"
-        description="Hubify no es un dashboard genérico: es tu plataforma para conectar y operar módulos digitales desde una sola experiencia."
-        actions={<Badge variant="accent">Sprint F1.0 · Visual</Badge>}
+        title="Tu plataforma"
+        description="Hubify concentra tus servicios en módulos independientes. Empieza por música y social — el resto se conecta después."
+        actions={
+          <Badge variant="accent" className="gap-1.5">
+            <Sparkles className="h-3 w-3" aria-hidden />
+            Visual F1.0
+          </Badge>
+        }
       />
 
-      <div className="mb-8 grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
-        <Card className="relative overflow-hidden bg-[linear-gradient(135deg,color-mix(in_srgb,var(--accent)_12%,var(--surface)),var(--surface))]">
-          <div className="relative z-10 max-w-xl space-y-3">
-            <Badge>Plataforma</Badge>
-            <h2 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
-              Un hub modular, listo para crecer.
-            </h2>
-            <p className="text-sm text-[var(--foreground-muted)] sm:text-base">
-              Esta vista es la base visual. Las integraciones, autenticación y
-              datos reales llegarán en sprints posteriores sin rediseñar la
-              interfaz.
-            </p>
-          </div>
-          <div
-            className="pointer-events-none absolute -right-10 -bottom-16 h-48 w-48 rounded-full bg-[color-mix(in_srgb,var(--accent)_20%,transparent)] blur-3xl"
-            aria-hidden
-          />
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Bell className="h-4 w-4 text-[var(--accent)]" />
-              <CardTitle>Notificaciones</CardTitle>
-            </div>
-          </CardHeader>
-          <CardDescription>
-            Sin eventos todavía. Cuando conectes módulos, verás alertas aquí.
-          </CardDescription>
-        </Card>
-      </div>
-
-      <Section className="mb-8">
+      {/* Featured modules — primary composition */}
+      <section aria-labelledby="featured-heading" className="space-y-4">
         <div className="flex items-end justify-between gap-3">
-          <h2 className="font-display text-lg font-semibold">Módulos</h2>
-          <span className="text-xs text-[var(--foreground-subtle)]">
-            Solo diseño · sin datos
-          </span>
+          <h2
+            id="featured-heading"
+            className="font-display text-lg font-semibold tracking-tight"
+          >
+            Módulos activos
+          </h2>
+          <p className="text-xs text-[var(--foreground-subtle)]">
+            Diseño listo · sin datos reales
+          </p>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {modules.map((module) => {
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          {featured.map((module, index) => {
             const Icon = module.icon
             return (
-              <Link key={module.path} to={module.path} className="group block">
-                <Card interactive className="h-full">
-                  <CardHeader>
-                    <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-md)] bg-[var(--accent-muted)] text-[var(--accent-hover)] transition-transform group-hover:scale-105">
-                      <Icon className="h-5 w-5" aria-hidden />
+              <motion.div
+                key={module.path}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.08, duration: 0.35 }}
+              >
+                <Link
+                  to={module.path}
+                  className={cn(
+                    'group relative block overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] p-6 shadow-[var(--shadow-sm)] transition-[transform,box-shadow,border-color] duration-300 hover:-translate-y-0.5 hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-md)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] sm:p-7',
+                    module.tone === 'spotify' && 'bg-[var(--surface)]',
+                    module.tone === 'instagram' && 'bg-[var(--surface)]',
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'pointer-events-none absolute inset-0 opacity-90',
+                      module.tone === 'spotify' &&
+                        'bg-[radial-gradient(ellipse_at_top_right,color-mix(in_srgb,var(--module-spotify)_22%,transparent),transparent_55%)]',
+                      module.tone === 'instagram' &&
+                        'bg-[radial-gradient(ellipse_at_top_right,color-mix(in_srgb,var(--module-instagram)_20%,transparent),transparent_55%)]',
+                    )}
+                    aria-hidden
+                  />
+
+                  <div className="relative flex h-full flex-col gap-6">
+                    <div className="flex items-start justify-between gap-3">
+                      <div
+                        className={cn(
+                          'flex h-12 w-12 items-center justify-center rounded-2xl text-white shadow-[var(--shadow-sm)] transition-transform duration-300 group-hover:scale-105',
+                          module.tone === 'spotify' &&
+                            'bg-[var(--module-spotify)]',
+                          module.tone === 'instagram' &&
+                            'bg-[linear-gradient(135deg,var(--module-instagram-from),var(--module-instagram-to))]',
+                        )}
+                      >
+                        <Icon className="h-5 w-5" aria-hidden />
+                      </div>
+                      <ArrowUpRight className="h-5 w-5 text-[var(--foreground-subtle)] transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-[var(--foreground)]" />
                     </div>
-                    <Badge variant="default">{module.status}</Badge>
-                  </CardHeader>
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <CardTitle>{module.title}</CardTitle>
-                      <CardDescription className="mt-1">
+
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium tracking-wide text-[var(--foreground-muted)] uppercase">
+                        {module.eyebrow}
+                      </p>
+                      <h3 className="font-display text-2xl font-semibold tracking-tight">
+                        {module.title}
+                      </h3>
+                      <p className="max-w-sm text-sm leading-relaxed text-[var(--foreground-muted)]">
                         {module.description}
-                      </CardDescription>
+                      </p>
                     </div>
-                    <ArrowUpRight className="mt-1 h-4 w-4 text-[var(--foreground-subtle)] opacity-0 transition-opacity group-hover:opacity-100" />
+
+                    <div className="mt-auto flex items-center gap-2 pt-2">
+                      <Badge variant="default">Sin conectar</Badge>
+                      <span className="text-xs text-[var(--foreground-subtle)]">
+                        OAuth del usuario
+                      </span>
+                    </div>
                   </div>
-                </Card>
-              </Link>
+                </Link>
+              </motion.div>
             )
           })}
         </div>
-      </Section>
+      </section>
 
-      <Section>
-        <div className="mb-3 flex items-center gap-2">
-          <Activity className="h-4 w-4 text-[var(--accent)]" />
-          <h2 className="font-display text-lg font-semibold">Actividad reciente</h2>
-        </div>
-        <Card className="space-y-3">
-          {activity.map((item) => (
-            <div
-              key={item}
-              className="flex items-start gap-3 border-b border-[var(--border)] pb-3 last:border-b-0 last:pb-0"
-            >
-              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
-              <p className="text-sm text-[var(--foreground-muted)]">{item}</p>
+      {/* Platform strip */}
+      <section
+        aria-labelledby="hub-heading"
+        className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]"
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.16, duration: 0.35 }}
+          className="relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-6 sm:p-7"
+        >
+          <div className="relative z-10 max-w-lg space-y-4">
+            <div className="flex items-center gap-2 text-[var(--accent)]">
+              <Waves className="h-4 w-4" aria-hidden />
+              <span className="text-xs font-medium tracking-wide uppercase">
+                Hubify
+              </span>
             </div>
-          ))}
-        </Card>
-      </Section>
+            <h2
+              id="hub-heading"
+              className="font-display text-2xl font-semibold tracking-tight sm:text-3xl"
+            >
+              Un solo lugar. Muchos servicios.
+            </h2>
+            <p className="text-sm leading-relaxed text-[var(--foreground-muted)]">
+              Cada integración es un módulo con la misma arquitectura. Tú
+              conectas tus cuentas; Hubify nunca embebe API Keys en el código.
+            </p>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Button variant="primary" disabled>
+                <Link2 className="h-4 w-4" aria-hidden />
+                Conectar módulos
+              </Button>
+              <Button variant="ghost" disabled>
+                Ver arquitectura
+              </Button>
+            </div>
+          </div>
+          <div
+            className="pointer-events-none absolute -right-8 -bottom-12 h-44 w-44 rounded-full bg-[color-mix(in_srgb,var(--accent)_18%,transparent)] blur-3xl"
+            aria-hidden
+          />
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.22, duration: 0.35 }}
+          className="rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--surface)] p-6"
+        >
+          <h2 className="font-display mb-4 text-base font-semibold">
+            Próximos módulos
+          </h2>
+          <ul className="space-y-3">
+            {upcoming.map((item) => (
+              <li
+                key={item.title}
+                className="flex items-center justify-between gap-3 border-b border-[var(--border)] pb-3 last:border-b-0 last:pb-0"
+              >
+                <span className="text-sm font-medium text-[var(--foreground)]">
+                  {item.title}
+                </span>
+                <span className="text-xs text-[var(--foreground-subtle)]">
+                  {item.hint}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </motion.div>
+      </section>
     </div>
   )
 }

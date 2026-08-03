@@ -22,6 +22,11 @@
 
   --transition-fast: 150ms cubic-bezier(0.22, 1, 0.36, 1);
   --transition-base: 220ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Module identity tokens (brand accents for feature shells) */
+  --module-spotify: #1ed760;
+  --module-instagram-from: #f58529;
+  --module-instagram-to: #dd2a7b;
 }
 
 :root,
