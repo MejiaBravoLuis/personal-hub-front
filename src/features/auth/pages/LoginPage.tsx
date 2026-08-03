@@ -5,7 +5,8 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { ROUTES } from '@/constants'
-import { getApiErrorMessage } from '@/services/api'
+import { getApiErrorMessage, getApiFieldErrors } from '@/services/api'
+import { FormAlert } from '../components/FormAlert'
 import { loginSchema, toLoginPayload, type LoginValues } from '../schemas'
 import { useAuthStore } from '../store/auth.store'
 
@@ -17,27 +18,50 @@ export function LoginPage() {
 
   const registeredMessage =
     (location.state as { registered?: boolean } | null)?.registered === true
-      ? 'Cuenta creada. Ya puedes iniciar sesión.'
+      ? 'Cuenta creada correctamente. Ya puedes iniciar sesión.'
       : null
 
   const {
     register,
     handleSubmit,
+    setError,
+    clearErrors,
     formState: { errors, isSubmitting },
   } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: { identifier: '', password: '' },
   })
 
   const onSubmit = async (values: LoginValues) => {
     setFormError(null)
+    clearErrors()
     try {
       await login(toLoginPayload(values))
       const from =
         (location.state as { from?: string } | null)?.from || ROUTES.dashboard
       navigate(from, { replace: true })
     } catch (error) {
-      setFormError(getApiErrorMessage(error, 'No se pudo iniciar sesión'))
+      const fieldErrors = getApiFieldErrors(error)
+      let hasFieldError = false
+
+      for (const [field, message] of Object.entries(fieldErrors)) {
+        if (field === 'email' || field === 'username' || field === 'identifier') {
+          setError('identifier', { type: 'server', message })
+          hasFieldError = true
+        }
+        if (field === 'password') {
+          setError('password', { type: 'server', message })
+          hasFieldError = true
+        }
+      }
+
+      if (!hasFieldError) {
+        setFormError(
+          getApiErrorMessage(error, 'No se pudo iniciar sesión. Revisa tus datos.'),
+        )
+      }
     }
   }
 
@@ -53,12 +77,7 @@ export function LoginPage() {
       </div>
 
       {registeredMessage ? (
-        <p
-          className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--foreground)]"
-          role="status"
-        >
-          {registeredMessage}
-        </p>
+        <FormAlert variant="success">{registeredMessage}</FormAlert>
       ) : null}
 
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -67,7 +86,11 @@ export function LoginPage() {
           autoComplete="username"
           placeholder="tu@email.com o usuario"
           error={errors.identifier?.message}
-          {...register('identifier')}
+          {...register('identifier', {
+            onChange: () => {
+              if (formError) setFormError(null)
+            },
+          })}
         />
         <Input
           label="Contraseña"
@@ -75,14 +98,14 @@ export function LoginPage() {
           autoComplete="current-password"
           placeholder="••••••••"
           error={errors.password?.message}
-          {...register('password')}
+          {...register('password', {
+            onChange: () => {
+              if (formError) setFormError(null)
+            },
+          })}
         />
 
-        {formError ? (
-          <p className="text-sm text-[var(--danger)]" role="alert">
-            {formError}
-          </p>
-        ) : null}
+        {formError ? <FormAlert variant="error">{formError}</FormAlert> : null}
 
         <Button type="submit" className="w-full" loading={isSubmitting}>
           Iniciar sesión

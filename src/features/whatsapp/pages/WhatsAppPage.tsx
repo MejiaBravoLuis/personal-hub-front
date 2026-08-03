@@ -13,6 +13,8 @@ import {
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
+import { CensoredModule } from '@/components/common/CensoredModule'
+import { useModuleLocks } from '@/features/integrations/hooks/useModuleLocks'
 import { cn } from '@/utils/cn'
 
 const chats = [
@@ -84,8 +86,17 @@ const thread = [
 export function WhatsAppPage() {
   const [activeId, setActiveId] = useState<string>(chats[0].id)
   const activeChat = chats.find((chat) => chat.id === activeId) ?? chats[0]
+  const { locks, isLoading } = useModuleLocks()
 
   return (
+    <CensoredModule
+      locked={locks.whatsapp}
+      loading={isLoading}
+      title="WhatsApp bloqueado"
+      description="Este módulo se activará cuando conectemos la API de WhatsApp."
+      accent="var(--module-whatsapp)"
+      className="flex min-h-0 flex-1 flex-col rounded-[var(--radius-xl)]"
+    >
     <div
       data-module="whatsapp"
       className="flex min-h-0 flex-1 flex-col gap-2"
@@ -281,5 +292,6 @@ export function WhatsAppPage() {
         </div>
       </motion.div>
     </div>
+    </CensoredModule>
   )
 }

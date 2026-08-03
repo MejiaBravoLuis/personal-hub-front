@@ -9,8 +9,12 @@ import {
   ArrowUpRight,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { CensoredModule } from '@/components/common/CensoredModule'
+import { useModuleLocks } from '@/features/integrations/hooks/useModuleLocks'
+import { useConnectProvider } from '@/features/integrations/hooks/useConnectProvider'
+import { FormAlert } from '@/features/auth'
+import { getApiErrorMessage } from '@/services/api'
 import { cn } from '@/utils/cn'
 
 const courses = [
@@ -90,20 +94,41 @@ const announcements = [
 ] as const
 
 export function CanvasPage() {
+  const { locks, isLoading } = useModuleLocks()
+  const connect = useConnectProvider('canvas')
+
   return (
+    <CensoredModule
+      locked={locks.canvas}
+      loading={isLoading}
+      title="Canvas bloqueado"
+      description="Conecta Canvas para ver cursos, entregas y anuncios reales."
+      actionLabel="Conectar Canvas"
+      actionLoading={connect.isPending}
+      onAction={() => connect.mutate()}
+      accent="var(--module-canvas)"
+      className="rounded-[var(--radius-xl)]"
+    >
     <div data-module="canvas" className="space-y-8">
       <PageHeader
         title="Canvas LMS"
-        description="Cursos, entregas y anuncios en Hubify. Cada usuario conectará su propia API Key — nunca embebida en el proyecto."
+        description="Cursos, entregas y anuncios en Hubify. Cada usuario conectará su propia cuenta."
         actions={
           <div className="flex items-center gap-2">
-            <Badge variant="default">Sin conectar</Badge>
-            <Button variant="secondary" size="sm" disabled>
-              Conectar API Key
-            </Button>
+            <Badge variant={locks.canvas ? 'default' : 'accent'}>
+              {locks.canvas ? 'Bloqueado' : 'Conectado'}
+            </Badge>
           </div>
         }
       />
+      {connect.isError ? (
+        <FormAlert variant="error">
+          {getApiErrorMessage(
+            connect.error,
+            'No se pudo iniciar la conexión con Canvas',
+          )}
+        </FormAlert>
+      ) : null}
 
       {/* Hero strip */}
       <motion.section
@@ -275,5 +300,6 @@ export function CanvasPage() {
         </motion.section>
       </div>
     </div>
+    </CensoredModule>
   )
 }

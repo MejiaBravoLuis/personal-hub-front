@@ -13,9 +13,18 @@ import {
   MOCK_PLAYLISTS,
   type MockTrack,
 } from '@/features/spotify/data/mockTracks'
+import type { SpotifyPlaylist } from '@/features/spotify/types'
 import { cn } from '@/utils/cn'
 
 type SidebarView = 'home' | 'search' | 'library'
+
+type SidebarPlaylist = {
+  id: string
+  name: string
+  tracks: number
+  image?: string | null
+  externalUrl?: string | null
+}
 
 type SpotifySidebarProps = {
   tracks: MockTrack[]
@@ -24,6 +33,9 @@ type SpotifySidebarProps = {
   className?: string
   /** Opens search view from outside (e.g. mobile) */
   forceView?: SidebarView
+  /** Live playlists when Spotify is connected */
+  livePlaylists?: SpotifyPlaylist[]
+  connected?: boolean
 }
 
 const navItems: { id: SidebarView; label: string; icon: LucideIcon }[] = [
@@ -48,6 +60,8 @@ export function SpotifySidebar({
   onSelectTrack,
   className,
   forceView,
+  livePlaylists,
+  connected = false,
 }: SpotifySidebarProps) {
   const [view, setView] = useState<SidebarView>('home')
   const [query, setQuery] = useState('')
@@ -69,13 +83,30 @@ export function SpotifySidebar({
     [tracks, query],
   )
 
+  const catalogPlaylists: SidebarPlaylist[] = useMemo(() => {
+    if (livePlaylists?.length) {
+      return livePlaylists.map((playlist) => ({
+        id: playlist.id,
+        name: playlist.name,
+        tracks: playlist.tracks,
+        image: playlist.image,
+        externalUrl: playlist.externalUrl,
+      }))
+    }
+    return MOCK_PLAYLISTS.map((playlist) => ({
+      id: playlist.id,
+      name: playlist.name,
+      tracks: playlist.tracks,
+    }))
+  }, [livePlaylists])
+
   const playlists = useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return MOCK_PLAYLISTS
-    return MOCK_PLAYLISTS.filter((playlist) =>
+    if (!q) return catalogPlaylists
+    return catalogPlaylists.filter((playlist) =>
       playlist.name.toLowerCase().includes(q),
     )
-  }, [query])
+  }, [catalogPlaylists, query])
 
   return (
     <aside className={cn('flex h-full min-h-0 w-full flex-col gap-2', className)}>
@@ -123,6 +154,7 @@ export function SpotifySidebar({
             activeTrackId={activeTrackId}
             onSelectTrack={onSelectTrack}
             searchRef={searchRef}
+            connected={connected}
           />
         ) : null}
 
@@ -154,28 +186,7 @@ export function SpotifySidebar({
                 <Plus className="h-4 w-4" />
               </button>
             </div>
-            <ul className="mb-3 space-y-0.5 border-b border-[var(--border)] pb-3">
-              {MOCK_PLAYLISTS.map((playlist) => (
-                <li key={playlist.id}>
-                  <button
-                    type="button"
-                    className="flex w-full items-center gap-3 rounded-[var(--radius-md)] px-2 py-2 text-left transition-colors hover:bg-[var(--surface-muted)]"
-                  >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-sm)] bg-[color-mix(in_srgb,var(--module-spotify)_16%,var(--surface-muted))] text-[var(--module-spotify)]">
-                      <Music2 className="h-4 w-4" aria-hidden />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">
-                        {playlist.name}
-                      </p>
-                      <p className="text-xs text-[var(--foreground-muted)]">
-                        Playlist · {playlist.tracks}
-                      </p>
-                    </div>
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <PlaylistList playlists={catalogPlaylists} />
             <p className="mb-2 px-2 text-xs font-medium tracking-wide text-[var(--foreground-muted)] uppercase">
               Canciones
             </p>
@@ -191,6 +202,63 @@ export function SpotifySidebar({
   )
 }
 
+function PlaylistList({ playlists }: { playlists: SidebarPlaylist[] }) {
+  if (playlists.length === 0) {
+    return (
+      <p className="mb-3 px-2 text-sm text-[var(--foreground-muted)]">
+        No hay playlists todavía.
+      </p>
+    )
+  }
+
+  return (
+    <ul className="mb-3 space-y-0.5 border-b border-[var(--border)] pb-3">
+      {playlists.map((playlist) => {
+        const content = (
+          <>
+            {playlist.image ? (
+              <img
+                src={playlist.image}
+                alt=""
+                className="h-10 w-10 rounded-[var(--radius-sm)] object-cover"
+              />
+            ) : (
+              <div className="flex h-10 w-10 items-center justify-center rounded-[var(--radius-sm)] bg-[color-mix(in_srgb,var(--module-spotify)_16%,var(--surface-muted))] text-[var(--module-spotify)]">
+                <Music2 className="h-4 w-4" aria-hidden />
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">{playlist.name}</p>
+              <p className="text-xs text-[var(--foreground-muted)]">
+                Playlist · {playlist.tracks}
+              </p>
+            </div>
+          </>
+        )
+
+        return (
+          <li key={playlist.id}>
+            {playlist.externalUrl ? (
+              <a
+                href={playlist.externalUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex w-full items-center gap-3 rounded-[var(--radius-md)] px-2 py-2 text-left transition-colors hover:bg-[var(--surface-muted)]"
+              >
+                {content}
+              </a>
+            ) : (
+              <div className="flex w-full items-center gap-3 rounded-[var(--radius-md)] px-2 py-2 text-left">
+                {content}
+              </div>
+            )}
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
 function SearchPanel({
   query,
   onQueryChange,
@@ -199,14 +267,16 @@ function SearchPanel({
   activeTrackId,
   onSelectTrack,
   searchRef,
+  connected,
 }: {
   query: string
   onQueryChange: (value: string) => void
   results: MockTrack[]
-  playlists: readonly { id: string; name: string; tracks: number }[]
+  playlists: SidebarPlaylist[]
   activeTrackId: string
   onSelectTrack: (id: string) => void
   searchRef: React.RefObject<HTMLInputElement | null>
+  connected: boolean
 }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -239,7 +309,9 @@ function SearchPanel({
       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
         {!query.trim() ? (
           <p className="px-1 text-xs text-[var(--foreground-subtle)]">
-            Busca por canción, artista o álbum. Mock local por ahora.
+            {connected
+              ? 'Filtra tus playlists y la pista actual.'
+              : 'Busca por canción, artista o álbum (demo local).'}
           </p>
         ) : null}
 
@@ -248,25 +320,7 @@ function SearchPanel({
             <p className="mb-1.5 px-1 text-xs font-medium tracking-wide text-[var(--foreground-muted)] uppercase">
               Playlists
             </p>
-            <ul className="space-y-0.5">
-              {playlists.map((playlist) => (
-                <li key={playlist.id}>
-                  <div className="flex items-center gap-3 rounded-[var(--radius-md)] px-2 py-2">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-sm)] bg-[color-mix(in_srgb,var(--module-spotify)_16%,var(--surface-muted))] text-[var(--module-spotify)]">
-                      <Music2 className="h-4 w-4" aria-hidden />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">
-                        {playlist.name}
-                      </p>
-                      <p className="text-xs text-[var(--foreground-muted)]">
-                        Playlist
-                      </p>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <PlaylistList playlists={playlists} />
           </div>
         ) : null}
 
@@ -321,12 +375,19 @@ function TrackList({
               )}
             >
               <span
-                className="relative h-10 w-10 shrink-0 rounded-[var(--radius-sm)]"
+                className="relative h-10 w-10 shrink-0 overflow-hidden rounded-[var(--radius-sm)]"
                 style={{
                   background: `linear-gradient(145deg, ${track.palette.primary}, ${track.palette.secondary})`,
                 }}
                 aria-hidden
               >
+                {track.imageUrl ? (
+                  <img
+                    src={track.imageUrl}
+                    alt=""
+                    className="h-full w-full object-cover"
+                  />
+                ) : null}
                 {track.hasVideo ? (
                   <Film className="absolute right-0.5 bottom-0.5 h-3 w-3 text-white drop-shadow" />
                 ) : null}

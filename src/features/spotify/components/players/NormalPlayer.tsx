@@ -33,12 +33,20 @@ export function NormalPlayer({
             background: `linear-gradient(145deg, ${track.palette.primary}, ${track.palette.secondary} 55%, #0f172a)`,
           }}
         >
-          <div className="flex h-full flex-col items-center justify-center gap-3 text-white/90">
-            <Music2 className="h-14 w-14 opacity-80" aria-hidden />
-            <span className="text-xs tracking-[0.2em] uppercase opacity-60">
-              Album art
-            </span>
-          </div>
+          {track.imageUrl ? (
+            <img
+              src={track.imageUrl}
+              alt={`Portada de ${track.album}`}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center gap-3 text-white/90">
+              <Music2 className="h-14 w-14 opacity-80" aria-hidden />
+              <span className="text-xs tracking-[0.2em] uppercase opacity-60">
+                Album art
+              </span>
+            </div>
+          )}
         </div>
       </motion.div>
 

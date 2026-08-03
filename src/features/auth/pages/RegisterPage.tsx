@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { ROUTES } from '@/constants'
-import { getApiErrorMessage } from '@/services/api'
+import { getApiErrorMessage, getApiFieldErrors } from '@/services/api'
+import { FormAlert } from '../components/FormAlert'
 import { registerSchema, type RegisterValues } from '../schemas'
 import { useAuthStore } from '../store/auth.store'
 
@@ -17,9 +18,15 @@ export function RegisterPage() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    watch,
+    trigger,
+    setError,
+    clearErrors,
+    formState: { errors, isSubmitting, touchedFields },
   } = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
+    mode: 'onBlur',
+    reValidateMode: 'onChange',
     defaultValues: {
       firstName: '',
       lastName: '',
@@ -30,8 +37,18 @@ export function RegisterPage() {
     },
   })
 
+  const password = watch('password')
+  const confirmPassword = watch('confirmPassword')
+
+  useEffect(() => {
+    if (touchedFields.confirmPassword || confirmPassword.length > 0) {
+      void trigger('confirmPassword')
+    }
+  }, [password, confirmPassword, touchedFields.confirmPassword, trigger])
+
   const onSubmit = async (values: RegisterValues) => {
     setFormError(null)
+    clearErrors()
     try {
       await registerUser({
         firstName: values.firstName.trim(),
@@ -42,7 +59,28 @@ export function RegisterPage() {
       })
       navigate(ROUTES.login, { replace: true, state: { registered: true } })
     } catch (error) {
-      setFormError(getApiErrorMessage(error, 'No se pudo crear la cuenta'))
+      const fieldErrors = getApiFieldErrors(error)
+      const fieldMap: Array<keyof RegisterValues> = [
+        'firstName',
+        'lastName',
+        'username',
+        'email',
+        'password',
+      ]
+
+      let hasFieldError = false
+      for (const field of fieldMap) {
+        if (fieldErrors[field]) {
+          setError(field, { type: 'server', message: fieldErrors[field] })
+          hasFieldError = true
+        }
+      }
+
+      if (!hasFieldError) {
+        setFormError(
+          getApiErrorMessage(error, 'No se pudo crear la cuenta. Revisa tus datos.'),
+        )
+      }
     }
   }
 
@@ -95,22 +133,23 @@ export function RegisterPage() {
           autoComplete="new-password"
           placeholder="Mínimo 8 caracteres"
           error={errors.password?.message}
+          hint="Usa al menos 8 caracteres."
           {...register('password')}
         />
         <Input
           label="Confirmar contraseña"
           type="password"
           autoComplete="new-password"
-          placeholder="••••••••"
+          placeholder="Repite tu contraseña"
           error={errors.confirmPassword?.message}
-          {...register('confirmPassword')}
+          {...register('confirmPassword', {
+            onChange: () => {
+              if (formError) setFormError(null)
+            },
+          })}
         />
 
-        {formError ? (
-          <p className="text-sm text-[var(--danger)]" role="alert">
-            {formError}
-          </p>
-        ) : null}
+        {formError ? <FormAlert variant="error">{formError}</FormAlert> : null}
 
         <Button type="submit" className="w-full" loading={isSubmitting}>
           Crear cuenta

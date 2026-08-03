@@ -4,6 +4,7 @@ export const ROUTES = {
   register: '/register',
   dashboard: '/dashboard',
   spotify: '/spotify',
+  spotifyOAuthCallback: '/integrations/spotify',
   instagram: '/instagram',
   whatsapp: '/whatsapp',
   canvas: '/canvas',

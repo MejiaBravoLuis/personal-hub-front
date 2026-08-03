@@ -12,6 +12,9 @@ export type MockTrack = {
   lyrics: string[]
   /** Simulated colors extracted from album art */
   palette: Pick<DynamicPalette, 'primary' | 'secondary'>
+  /** Real album art when connected to Spotify */
+  imageUrl?: string | null
+  externalUrl?: string | null
 }
 
 /**

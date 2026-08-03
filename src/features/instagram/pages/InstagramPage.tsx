@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Badge } from '@/components/ui/Badge'
-import { Button } from '@/components/ui/Button'
+import { CensoredModule } from '@/components/common/CensoredModule'
 import {
   InstagramNav,
   InstagramNavToggle,
@@ -14,6 +14,10 @@ import {
   IG_MESSAGES,
   type InstagramView,
 } from '@/features/instagram/data/mockInstagram'
+import { useModuleLocks } from '@/features/integrations/hooks/useModuleLocks'
+import { useConnectProvider } from '@/features/integrations/hooks/useConnectProvider'
+import { FormAlert } from '@/features/auth'
+import { getApiErrorMessage } from '@/services/api'
 import { cn } from '@/utils/cn'
 
 const NAV_STORAGE_KEY = 'hubify-instagram-nav-open'
@@ -36,6 +40,8 @@ export function InstagramPage() {
   const [navOpen, setNavOpen] = useState(() =>
     typeof window === 'undefined' ? true : readNavOpen(),
   )
+  const { locks, isLoading } = useModuleLocks()
+  const connect = useConnectProvider('instagram')
 
   const unread = IG_MESSAGES.filter((m) => m.unread).length
 
@@ -48,6 +54,17 @@ export function InstagramPage() {
   }
 
   return (
+    <CensoredModule
+      locked={locks.instagram}
+      loading={isLoading}
+      title="Instagram bloqueado"
+      description="Conecta tu cuenta para desbloquear feed, búsqueda y mensajes."
+      actionLabel="Conectar Instagram"
+      actionLoading={connect.isPending}
+      onAction={() => connect.mutate()}
+      accent="var(--module-instagram-to)"
+      className="flex min-h-0 flex-1 flex-col rounded-[var(--radius-xl)]"
+    >
     <div
       data-module="instagram"
       className="flex min-h-0 flex-1 flex-col gap-2 lg:flex-row lg:gap-3"
@@ -97,11 +114,22 @@ export function InstagramPage() {
                 {unread} msgs
               </Badge>
             ) : null}
-            <Button variant="secondary" size="sm" disabled>
-              Conectar
-            </Button>
+            <Badge variant={locks.instagram ? 'default' : 'accent'}>
+              {locks.instagram ? 'Bloqueado' : 'Conectado'}
+            </Badge>
           </div>
         </header>
+
+        {connect.isError ? (
+          <div className="relative z-20 px-4 pt-3">
+            <FormAlert variant="error">
+              {getApiErrorMessage(
+                connect.error,
+                'No se pudo iniciar la conexión con Instagram',
+              )}
+            </FormAlert>
+          </div>
+        ) : null}
 
         {/* Mobile tabs */}
         <div className="relative z-10 border-b border-[var(--border)] px-2 py-2 lg:hidden">
@@ -159,5 +187,6 @@ export function InstagramPage() {
         </div>
       </section>
     </div>
+    </CensoredModule>
   )
 }

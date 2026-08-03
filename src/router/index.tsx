@@ -10,6 +10,7 @@ import { DashboardPage } from '@/features/dashboard'
 import { ROUTES } from '@/constants'
 
 import { SpotifyPage } from '@/features/spotify/pages/SpotifyPage'
+import { SpotifyOAuthCallbackPage } from '@/features/spotify/pages/SpotifyOAuthCallbackPage'
 import { InstagramPage } from '@/features/instagram/pages/InstagramPage'
 import { WhatsAppPage } from '@/features/whatsapp/pages/WhatsAppPage'
 import { CanvasPage } from '@/features/canvas/pages/CanvasPage'
@@ -43,6 +44,10 @@ export const router = createBrowserRouter([
         children: [
           { path: ROUTES.dashboard, element: <DashboardPage /> },
           { path: ROUTES.spotify, element: <SpotifyPage /> },
+          {
+            path: ROUTES.spotifyOAuthCallback,
+            element: <SpotifyOAuthCallbackPage />,
+          },
           { path: ROUTES.instagram, element: <InstagramPage /> },
           { path: ROUTES.whatsapp, element: <WhatsAppPage /> },
           { path: ROUTES.canvas, element: <CanvasPage /> },

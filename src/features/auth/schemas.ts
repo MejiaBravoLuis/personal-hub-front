@@ -22,11 +22,19 @@ export const registerSchema = z
       ),
     email: z.email('Ingresa un correo válido'),
     password: z.string().min(8, 'Mínimo 8 caracteres'),
-    confirmPassword: z.string().min(8, 'Confirma tu contraseña'),
+    confirmPassword: z.string().min(1, 'Confirma tu contraseña'),
   })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Las contraseñas no coinciden',
-    path: ['confirmPassword'],
+  .superRefine((data, ctx) => {
+    if (
+      data.confirmPassword.length > 0 &&
+      data.password !== data.confirmPassword
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Las contraseñas no coinciden',
+        path: ['confirmPassword'],
+      })
+    }
   })
 
 export type RegisterValues = z.infer<typeof registerSchema>
